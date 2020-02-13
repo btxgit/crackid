@@ -1,7 +1,7 @@
 '''                __     _    __
  ___________ _____/ /__  (_)__/ /
-/ __/ __/ _ `/ __/  '_/ / / _  / 
-\__/_/  \_,_/\__/_/\_\ /_/\_,_/  
+/ __/ __/ _ `/ __/  '_/ / / _  /
+\__/_/  \_,_/\__/_/\_\ /_/\_,_/
 comic rack id class prototype btx
 '''
 
@@ -49,6 +49,9 @@ class cmxdb(object):
         if 'Web' in self.doc:
             urls.add(self.doc['Web'])
             weburl = urlparse(self.doc['Web'])
+        else:
+            weburl = None
+
         if 'Notes' in self.doc and self.doc['Notes'] is not None:
             for k in self.idfind.keys():
                 rexp = self.idfind[k][0]
@@ -59,7 +62,7 @@ class cmxdb(object):
                     url = fmt.format(self.doc[k])
                     if url != '':
                         newurl =  urlparse(url)
-                        if (weburl.netloc != newurl.netloc) or (os.path.basename(weburl.path) != os.path.basename(newurl.path)):
+                        if (weburl is None) or (weburl.netloc != newurl.netloc) or (os.path.basename(weburl.path) != os.path.basename(newurl.path)):
                             urls.add(url)
         if len(urls) > 0:
             self.doc['urls'] = list(urls)
@@ -73,3 +76,5 @@ class cmxdb(object):
             if isinstance(val, list):
                 val = '\n'.join(val)
             self.doc[k] = val.strip()
+
+

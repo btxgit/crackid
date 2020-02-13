@@ -1,13 +1,13 @@
 '''                __     _    __
  ___________ _____/ /__  (_)__/ /
-/ __/ __/ _ `/ __/  '_/ / / _  / 
-\__/_/  \_,_/\__/_/\_\ /_/\_,_/  
+/ __/ __/ _ `/ __/  '_/ / / _  /
+\__/_/  \_,_/\__/_/\_\ /_/\_,_/
 comic rack id class prototype btx
 '''
 
+import os
 import zipfile
 import rarfile
-
 
 class procarch(object):
     ''' Processes a single file (either rar or zip) and extracts comicinfo
@@ -38,7 +38,9 @@ class procarch(object):
 
     def extract_comicinfo(self):
         for ti in self.ao.infolist():
-            if ti.filename.lower() == 'comicinfo.xml':
+            if os.path.basename(ti.filename).lower() == 'comicinfo.xml':
                 with self.ao.open(ti, 'r') as archread:
                     return archread.read()
         return None
+
+

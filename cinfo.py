@@ -1,29 +1,43 @@
 #!/usr/bin/env python3
 
-'''                __     _    __
+'''
+                   __     _    __
  ___________ _____/ /__  (_)__/ /
-/ __/ __/ _ `/ __/  '_/ / / _  / 
-\__/_/  \_,_/\__/_/\_\ /_/\_,_/  
-comic rack id class prototype btx
+/ __/ __/ _ `/ __/  '_/ / / _  /
+\__/_/  \_,_/\__/_/\_\ /_/\_,_/
+----comic-rack-id-util-by-btx----
+
+Usage:
+  cinfo [-j | -r] PATH...
+  cinfo -h || cinfo --help
+
+Options:
+  -j             Display as JSON
+  -r             Display as raw
+  -h --help      Show this screen
+
 '''
 
 import os
 import sys
 from crackid import comicinfo_harvester
 from colorama import init
+from docopt import docopt
 
+__version__='0.4.0'
 
 init()
 
 
 if __name__ == '__main__':
-    args = sys.argv[1:]
-    argc = len(args)
+    args = docopt(__doc__, version=__version__)
 
-    if argc == 0:
+    if len(args['PATH']) == 0:
         base = input("Enter the directory to traverse: ")
-        args.append(base)
+        args['PATH'].append(base)
 
-    for base in args:
-        cih = comicinfo_harvester(base)
-        cih.scan_dirs()
+    cih = comicinfo_harvester(args)
+    cih.scan_dirs()
+
+
+

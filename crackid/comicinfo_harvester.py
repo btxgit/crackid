@@ -1,103 +1,46 @@
 '''                __     _    __
  ___________ _____/ /__  (_)__/ /
-/ __/ __/ _ `/ __/  '_/ / / _  / 
-\__/_/  \_,_/\__/_/\_\ /_/\_,_/  
+/ __/ __/ _ `/ __/  '_/ / / _  /
+\__/_/  \_,_/\__/_/\_\ /_/\_,_/
 comic rack id class prototype btx
 '''
 
 import os
 import sys
-from shutil import get_terminal_size
-from textwrap import TextWrapper
-from colorama import Fore, Back, Style
 from .cmxdb import cmxdb
 from .procarch import procarch
-
-def center_title(title):
-    ts = get_terminal_size()
-    tl = len(title)
-    padl = round((ts.columns - tl) / 2)
-    padr = ts.columns - (padl + tl)
-    padlstr = ' ' * padl
-    padrstr = ' ' * padr
-    sys.stdout.write("\n" + Style.BRIGHT + Back.BLUE + Fore.WHITE + padlstr + title + padrstr + Style.RESET_ALL + "\n" + Fore.YELLOW + Style.DIM + ' ̅' * ts.columns + Style.RESET_ALL + "\n" )
-    sys.stdout.flush()
-
-def color_pairs(tups):
-    olist = []
-    for key, val in tups:
-        kstr = Fore.GREEN + Style.NORMAL + '{}: '.format(key)
-        vstr = Fore.GREEN + Style.BRIGHT + '{}'.format(val)
-        olist.append('{}{}{}'.format(kstr, vstr, Style.RESET_ALL))
-    olstr = ', '.join(olist)
-    sys.stdout.write(olstr)
-    sys.stdout.flush()
-
-def output_attrib(k, val):
-    aname_color = Style.NORMAL + Fore.MAGENTA
-    aval_color = Style.BRIGHT + Fore.MAGENTA
-    close_color = Style.RESET_ALL
-    attrib_width = 20
-    attrib_plus_pad = attrib_width + 3
-
-    fmtstr1 = '{}{:>%ds} {}{} {}{}\n' % attrib_width
-    fmtstr2 = '{} {}{} {}{}\n'
-
-    ts = get_terminal_size()
-    if val is None:
-        return
-    tl = len(val)
-    max_val_width = ts.columns - attrib_plus_pad
-    alllines = []
-    
-    for line in val.split('\n'):
-        tl = len(line)
-        lines = []
-        
-        if tl < max_val_width:
-            alllines.append(line)
-        else:
-            tw = TextWrapper(width=ts.columns - attrib_plus_pad, break_on_hyphens=False, break_long_words=False)
-#            line = ' ' * attrib_plus_pad + line
-            for line in tw.wrap(line):
-                alllines.append(line)
-
-    totlines = len(alllines)
-    first = True
-#    sys.stdout.write("\n\n%s\n" % str(alllines))
-#    sys.stdout.flush()
-    for ln in range(totlines):
-        line = alllines[ln].strip()
-        if first:
-            sep = '┉' if totlines == 1 else '╭'
-            outstr = fmtstr1.format(aname_color, k, aval_color, sep, line, close_color)
-            first = False
-        else:
-            if ln + 1 == totlines:
-                sep = '╰'
-            else:
-                sep = '┊'
-            outstr = fmtstr2.format(' ' * attrib_width, aval_color, sep, line, close_color)
-        sys.stdout.write(outstr)
-        sys.stdout.flush()
+from pprint import pprint
+import json
+from .console_output import console_output
 
 
 class comicinfo_harvester(object):
-    def __init__(self, basedir='.'):
+    def __init__(self, args):
+        self.args = args
+        self.pathlist = [ os.path.realpath(tdir) for tdir in args['PATH'] if os.path.exists(tdir) ]
         self.cmxdb = cmxdb()
         self.procarch = procarch()
-        self.basedir = os.path.realpath(basedir)
         self.num_files = self.num_books = self.num_cinfo = 0
-        
-    def process_file(self, fullpath):
+        self.out = console_output()
+
+    def proc_cinfo(self, fullpath):
+        j = {}
+        outjson = self.args['-j']
         if self.procarch.open_archive(fullpath):
             xmlstr = self.procarch.extract_comicinfo()
             if xmlstr is None:
+#                print(f"No comicinfo.xml file in {fullpath}")
                 return False
+            if outjson and self.num_cinfo > 0:
+                print(',')
             self.num_cinfo += 1
             fn = os.path.basename(fullpath)
-            center_title(fn)
+            if not outjson:
+                self.out.center_title(fn)
             self.cmxdb.parse_xml_str(xmlstr)
+            if self.args['-r']:
+                print(xmlstr)
+                return True
 
             for k in sorted(self.cmxdb.doc.keys(), key=lambda x: x.lower()):
                 if k.lower() == 'comicinfo':
@@ -111,21 +54,49 @@ class comicinfo_harvester(object):
                 val = val.strip()
                 if val == '':
                     continue
-                output_attrib(k, val)
+
+                if not outjson:
+                    self.out.output_attrib(k, val)
+                else:
+                    j[k] = val
+        if outjson:
+            print(json.dumps(j))
+
         return True
+
+    def proc_file(self, fullpath):
+        self.num_files += 1
+        lcext = fullpath.lower()[-4:]
+        if lcext in ['.cbr', '.cbz', '.rar', '.zip']:
+            self.num_books += 1
+
+            return self.proc_cinfo(fullpath)
+        return False
 
     def scan_dirs(self):
         self.num_files = self.num_books = self.num_cinfo = 0
+        outjson = self.args['-j']
 
-        for dirpath, dirnames, filenames in os.walk(self.basedir, followlinks=True):
-            for fn in filenames:
-                self.num_files += 1
-                lcext = fn.lower()[-4:]
-                if lcext in ['.cbr', '.cbz', '.rar', '.zip']:
-                    self.num_books += 1
+        if outjson:
+            print("[")
+        for basedir in self.pathlist:
+            if os.path.isfile(basedir):
+#                print(f"Processing file: {basedir}")
+                self.proc_file(basedir)
+                continue
+
+            if not os.path.isdir(basedir):
+                continue
+
+            for dirpath, dirnames, filenames in os.walk(basedir, followlinks=True):
+                for fn in filenames:
                     fullpath = os.path.join(dirpath, fn)
-                    if not self.process_file(fullpath):
-                        continue
+                    self.proc_file(fullpath)
+        if outjson:
+            print("]")
+
         print()
         pct = '{}%'.format(round(self.num_cinfo/self.num_books * 10000) / 100.0)
-        color_pairs([('Total # Files', self.num_files), ('Books', self.num_books), ('ComicInfo files', self.num_cinfo), ('Pct. with XML', pct)])
+        self.out.color_pairs([('Total # Files', self.num_files), ('Books', self.num_books), ('ComicInfo files', self.num_cinfo), ('Pct. with XML', pct)])
+
+
