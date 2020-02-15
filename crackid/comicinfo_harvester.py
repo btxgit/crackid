@@ -74,6 +74,9 @@ class comicinfo_harvester(object):
         return False
 
     def scan_dirs(self):
+        ''' the outside of the loop... for each arg, call proc_file if it's
+            a file, do os.walk on the arg if it's a dir...
+        '''
         self.num_files = self.num_books = self.num_cinfo = 0
         outjson = self.args['-j']
 
@@ -94,6 +97,8 @@ class comicinfo_harvester(object):
                     self.proc_file(fullpath)
         if outjson:
             print("]")
+            
+        # Display totals
 
         pct = '{}%'.format(round(self.num_cinfo/self.num_books * 10000) / 100.0)
         self.out.color_pairs([('Total # Files', self.num_files), ('Books', self.num_books), ('ComicInfo files', self.num_cinfo), ('Pct. with XML', pct)])

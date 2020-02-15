@@ -11,6 +11,8 @@ from textwrap import TextWrapper
 from colorama import Fore, Back, Style
 
 class console_output(object):
+    ''' TODO: turn into a usable class
+    '''
     def __init__(self):
         pass
 

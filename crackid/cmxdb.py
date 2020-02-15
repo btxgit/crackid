@@ -27,9 +27,14 @@ class cmxdb(object):
                        }
 
     def parse_xml_str(self, xmlstr):
+        ''' parses <xmlstr> into json doc self.doc, where it can
+            be processed and shipped off to market
+        '''
+
         self.doc = {}
 
-        # Fix up broken ComicInfo files
+        # Fix up broken ComicInfo files - for some reason, the ampersand
+        # isn't escaped sometimes.
         if b'& ' in xmlstr:
             xmlstr = xmlstr.replace(b'& ', b'&amp; ')
 
@@ -41,18 +46,20 @@ class cmxdb(object):
             for cinfch in cinf.iter():
                 if cinfch.text is None:
                     continue
-#                cinval = cinfch.text.replace('\n', '  ')
                 cinval = re.sub(r'\s\s+', '  ', cinfch.text)
                 txt = cinval if cinval != '' else None
                 tag = cinfch.tag
                 self.doc[tag] = txt
+        
+        # Gather the URLs, both the supplied and derived
         urls = set()
         if 'Web' in self.doc:
             urls.add(self.doc['Web'])
             weburl = urlparse(self.doc['Web'])
         else:
             weburl = None
-
+        
+        # Generate the derived URLs
         if 'Notes' in self.doc and self.doc['Notes'] is not None:
             for k in self.idfind.keys():
                 rexp = self.idfind[k][0]
@@ -67,7 +74,7 @@ class cmxdb(object):
                             urls.add(url)
         if len(urls) > 0:
             self.doc['urls'] = list(urls)
-
+        
         for k in sorted(self.doc.keys()):
             val = self.doc[k]
             if val is None:
