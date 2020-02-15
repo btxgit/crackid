@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 from setuptools import Command
 from shutil import rmtree
 
-class strip_spaces(Command):
+class StripSpaces(Command):
     user_options = []
     def initialize_options(self):
         pass
@@ -75,7 +75,7 @@ class CleanCommand(Command):
         print("Removing garbage files...")
         self.clean_subdirs(basedir)
 
-inrel=['colorama==0.4.1', 'rarfile==3.1']
+inrel=['colorama==0.4.1', 'rarfile==3.1', 'docopt>=0.6.2']
 
 def build_config(**kw):
     bcfg = {}
@@ -94,15 +94,11 @@ if not pat:
     sys.exit(1)
     
 rip_ver = pat.group(1)
-# maj, min, rel = [ int(rv, 10) for rv in rip_ver.split('.') ]
-# rel += 1
-# rip_ver = f'{maj}.{min}.{rel}'
 
 bcfg = build_config(
     name='crackid',
     version=rip_ver,
     packages=find_packages(),
-#    py_modules=['crackid'],
     entry_points={
         'console_scripts': [ 'crackid=crackid.__main__:main' ]
     },
@@ -114,4 +110,4 @@ bcfg = build_config(
     install_requires=inrel
 )
 
-setup(zip_safe=False, cmdclass={ 'distclean': CleanCommand }, **bcfg)
+setup(zip_safe=False, cmdclass={ 'distclean': CleanCommand, 'stripspaces': StripSpaces }, **bcfg)
