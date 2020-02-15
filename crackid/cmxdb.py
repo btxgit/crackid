@@ -19,8 +19,9 @@ class cmxdb(object):
         self.tree = self.root = None
         self.doc = {}
         self.idfind = {'cmxid': (r'\[CMXDB(\d+)\]', 'https://www.comixology.com/ext/digital-comic/{}', 'Comixology Book ID'),
+                       'odid': (r'\[ODDB(\d+)\]', 'https://overdrive.com/media/{}', 'Overdrive Book ID'),
                        'cvid': (r'\[CVDB(\d+)\]', 'https://comicvine.gamespot.com/ext/4000-{}/', 'ComicVine Book ID'),
-                       'isbn': (r'\[ISBN(\d13)\]', 'https://www.amazon.com/gp/search/ref=sr_adv_b/?search-alias=stripbooks&unfiltered=1&field-keywords=&field-author=&field-title=&field-isbn={}&field-publisher=&node=&field-p_n_condition-type=&p_n_feature_browse-bin=&field-age_range=&field-language=&field-dateop=&field-datemod=&field-dateyear=&sort=relevanceexprank&Adv-Srch-Books-Submit.x=42&Adv-Srch-Books-Submit.y=6', 'International Standard Book Number'),
+                       'isbn': (r'\[ISBN(\d{13})\]', 'https://www.amazon.com/gp/search/ref=sr_adv_b/?search-alias=stripbooks&unfiltered=1&field-keywords=&field-author=&field-title=&field-isbn={}', 'International Standard Book Number'),
                        'dmdnum': (r'\[DMDDB([A-Z]{3}\d+)\]', 'https://www.previewsworld.com/Catalog/{}', 'Diamond Number'),
                        'asin': (r'\[ASIN([A-Z0-9]{10})\]', 'https://www.amazon.com/dp/{}', 'Amazon Standard Identification Number')
                        }

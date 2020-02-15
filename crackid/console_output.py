@@ -1,3 +1,10 @@
+'''                __     _    __
+ ___________ _____/ /__  (_)__/ /
+/ __/ __/ _ `/ __/  '_/ / / _  /
+\__/_/  \_,_/\__/_/\_\ /_/\_,_/
+comic rack id class prototype btx
+'''
+
 import sys
 from shutil import get_terminal_size
 from textwrap import TextWrapper
@@ -14,10 +21,44 @@ class console_output(object):
         padr = ts.columns - (padl + tl)
         padlstr = ' ' * padl
         padrstr = ' ' * padr
-        sys.stdout.write("\n" + Style.BRIGHT + Back.BLUE + Fore.WHITE + padlstr + title + padrstr + Style.RESET_ALL + "\n" + Fore.YELLOW + Style.DIM + ' ̅' * ts.columns + Style.RESET_ALL + "\n" )
+        linec = '⎽'
+        topline = linec * (ts.columns)
+        linec = '𝄖'
+        botline = linec * (ts.columns)
+        tline = linec*(ts.columns)
+        sys.stdout.write(Fore.YELLOW + Style.NORMAL + topline + Style.RESET_ALL)
+        sys.stdout.write("\n{}{}{}{}{}\n".format(Style.BRIGHT + Back.BLUE + Fore.WHITE, padlstr, title, padrstr, Style.RESET_ALL))
+        sys.stdout.write('{}{}{}\n'.format(Fore.YELLOW + Style.NORMAL, botline, Style.RESET_ALL))
         sys.stdout.flush()
 
+    def scan_dirs(self):
+        self.num_files = self.num_books = self.num_cinfo = 0
+        outjson = self.args['-j']
+
+        if outjson:
+            print("[")
+        for basedir in self.pathlist:
+            if os.path.isfile(basedir):
+#                print(f"Processing file: {basedir}")
+                self.proc_file(basedir)
+                continue
+
+            if not os.path.isdir(basedir):
+                continue
+
+            for dirpath, dirnames, filenames in os.walk(basedir, followlinks=True):
+                for fn in filenames:
+                    fullpath = os.path.join(dirpath, fn)
+                    self.proc_file(fullpath)
+        if outjson:
+            print("]")
+
+        print()
+        pct = '{}%'.format(round(self.num_cinfo/self.num_books * 10000) / 100.0)
+        self.out.color_pairs([('Total # Files', self.num_files), ('Books', self.num_books), ('ComicInfo files', self.num_cinfo), ('Pct. with XML', pct)])
+
     def color_pairs(self, tups):
+        ts = get_terminal_size()
         ntups = len(tups)
         sepstr = ', '
         keysep = ': '
@@ -27,14 +68,21 @@ class console_output(object):
         for key, val in tups:
             if not isinstance(val, str):
                 val = str(val)
-            kstr = Fore.GREEN + Style.NORMAL + '{}{}'.format(key, keysep)
-            vstr = Fore.GREEN + Style.BRIGHT + '{}'.format(val)
+            kstr = Fore.BLACK + Back.WHITE + Style.NORMAL + '{}{}'.format(key, keysep)
+            vstr = Fore.BLACK + Back.WHITE + Style.NORMAL + '{}'.format(val)
             kvlen += (len(key) + len(keysep) + len(val))
-            olist.append('{}{}{}'.format(kstr, vstr, Style.RESET_ALL))
+            olist.append('{}{}'.format(kstr, vstr))
         olstr = sepstr.join(olist)
         totwid = kvlen + sepwidth
-        numspaces = (totwid // 2)
-        sys.stdout.write('{}{}'.format(' ' * numspaces, olstr))
+        padl = round((ts.columns - totwid) / 2)
+        padr = ts.columns - (totwid + padl)
+        linec = '⎽'
+        linetop = linec * ts.columns
+        linec = '𝄖'
+        linebot = linec * ts.columns
+        sys.stdout.write('{}{}\n'.format(Fore.WHITE + Style.NORMAL, linetop))
+        sys.stdout.write('{}{}{}{}{}\n'.format(Back.WHITE + Style.NORMAL, ' ' * padl, olstr, ' ' * padr, Style.RESET_ALL))
+        sys.stdout.write('{}{}\n'.format(Fore.WHITE + Style.NORMAL, linebot))
         sys.stdout.flush()
 
     def output_attrib(self, k, val):
@@ -53,8 +101,9 @@ class console_output(object):
         tl = len(val)
         max_val_width = ts.columns - attrib_plus_pad
         alllines = []
-
-        val = val.replace('\n', '\n\n').rstrip('\n')
+        repnl = '\n\n' if k == 'Summary' else '\n'
+        
+        val = val.replace('\n', repnl).rstrip('\n')
 
         for line in val.split('\n'):
             tl = len(line)

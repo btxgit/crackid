@@ -95,7 +95,6 @@ class comicinfo_harvester(object):
         if outjson:
             print("]")
 
-        print()
         pct = '{}%'.format(round(self.num_cinfo/self.num_books * 10000) / 100.0)
         self.out.color_pairs([('Total # Files', self.num_files), ('Books', self.num_books), ('ComicInfo files', self.num_cinfo), ('Pct. with XML', pct)])
 
