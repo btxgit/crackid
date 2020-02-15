@@ -34,3 +34,6 @@ python setup.py install
 * crackid /both/directories /and/individual/books.cbz
 
 The crackid program currently only supports console ANSI output
+
+# crackid in use #
+![In Action](https://raw.githubusercontent.com/btxgit/crackid/master/swag/crackid3.gif)
