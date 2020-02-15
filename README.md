@@ -36,4 +36,4 @@ python setup.py install
 The crackid program currently only supports console ANSI output
 
 # crackid in use #
-![In Action](https://raw.githubusercontent.com/btxgit/crackid/master/swag/crackid3.gif)
+![In Action](crackid3.gif)
