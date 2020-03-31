@@ -8,12 +8,13 @@
 ----comic-rack-id-util-by-btx----
 
 Usage:
-  cinfo [-j | -r] PATH...
+  cinfo [-j | -r] [-y YACROOT] PATH...
   cinfo -h || cinfo --help
 
 Options:
   -j             Display as JSON
   -r             Display as raw
+  -y YACROOT     YAC (YACROOT must have the .yacreaderlibrary)
   -h --help      Show this screen
   --version      Show the current version
 '''

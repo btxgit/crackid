@@ -9,3 +9,9 @@ debug/*
 test/*
 test*sh
 __pyscahe__
+release.sh
+*.sublime-workspace
+build/*
+dist/*
+crackid.egg-info
+bak

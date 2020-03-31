@@ -104,7 +104,7 @@ class console_output(object):
         max_val_width = ts.columns - attrib_plus_pad
         alllines = []
         repnl = '\n\n' if k == 'Summary' else '\n'
-        
+
         val = val.replace('\n', repnl).rstrip('\n')
 
         for line in val.split('\n'):

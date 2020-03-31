@@ -21,6 +21,7 @@ class cmxdb(object):
         self.idfind = {'cmxid': (r'\[CMXDB(\d+)\]', 'https://www.comixology.com/ext/digital-comic/{}', 'Comixology Book ID'),
                        'odid': (r'\[ODDB(\d+)\]', 'https://overdrive.com/media/{}', 'Overdrive Book ID'),
                        'cvid': (r'\[CVDB(\d+)\]', 'https://comicvine.gamespot.com/ext/4000-{}/', 'ComicVine Book ID'),
+                       'issue id': (r'\[Issue ID (\d+)\]', 'https://comicvine.gamespot.com/ext/4000-{}/', 'ComicTagger and Mylar CVID variant'),
                        'isbn': (r'\[ISBN(\d{13})\]', 'https://www.amazon.com/gp/search/ref=sr_adv_b/?search-alias=stripbooks&unfiltered=1&field-keywords=&field-author=&field-title=&field-isbn={}', 'International Standard Book Number'),
                        'dmdnum': (r'\[DMDDB([A-Z]{3}\d+)\]', 'https://www.previewsworld.com/Catalog/{}', 'Diamond Number'),
                        'asin': (r'\[ASIN([A-Z0-9]{10})\]', 'https://www.amazon.com/dp/{}', 'Amazon Standard Identification Number')
@@ -50,7 +51,7 @@ class cmxdb(object):
                 txt = cinval if cinval != '' else None
                 tag = cinfch.tag
                 self.doc[tag] = txt
-        
+
         # Gather the URLs, both the supplied and derived
         urls = set()
         if 'Web' in self.doc:
@@ -58,7 +59,7 @@ class cmxdb(object):
             weburl = urlparse(self.doc['Web'])
         else:
             weburl = None
-        
+
         # Generate the derived URLs
         if 'Notes' in self.doc and self.doc['Notes'] is not None:
             for k in self.idfind.keys():
@@ -74,7 +75,7 @@ class cmxdb(object):
                             urls.add(url)
         if len(urls) > 0:
             self.doc['urls'] = list(urls)
-        
+
         for k in sorted(self.doc.keys()):
             val = self.doc[k]
             if val is None:
