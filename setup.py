@@ -90,14 +90,14 @@ with open('crackid/__init__.py', 'rb') as fd:
 
 pat = re.search(r'''__version__\s*=\s*\'([^\']+)\'''', s)
 if not pat:
-    print("Unable to determine the verison number from the riphd.py file.")
+    print("Unable to determine the verison number from the __init__.py file.")
     sys.exit(1)
     
-rip_ver = pat.group(1)
+cid_ver = pat.group(1)
 
 bcfg = build_config(
     name='crackid',
-    version=rip_ver,
+    version=cid_ver,
     packages=find_packages(),
     entry_points={
         'console_scripts': [ 'crackid=crackid.__main__:main' ]
