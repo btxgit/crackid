@@ -23,6 +23,7 @@ class cmxdb(object):
                        'cvid': (r'\[CVDB(\d+)\]', 'https://comicvine.gamespot.com/ext/4000-{}/', 'ComicVine Book ID'),
                        'issue id': (r'\[Issue ID (\d+)\]', 'https://comicvine.gamespot.com/ext/4000-{}/', 'ComicTagger and Mylar CVID variant'),
                        'isbn': (r'\[ISBN(\d{13})\]', 'https://www.amazon.com/gp/search/ref=sr_adv_b/?search-alias=stripbooks&unfiltered=1&field-keywords=&field-author=&field-title=&field-isbn={}', 'International Standard Book Number'),
+                       'gcd': [r'\[GCD(\d+)\]', 'https://www.comics.org/issue/{}/', 'Grand Comics Database'),
                        'dmdnum': (r'\[DMDDB([A-Z]{3}\d+)\]', 'https://www.previewsworld.com/Catalog/{}', 'Diamond Number'),
                        'asin': (r'\[ASIN([A-Z0-9]{10})\]', 'https://www.amazon.com/dp/{}', 'Amazon Standard Identification Number')
                        }
