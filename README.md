@@ -35,6 +35,7 @@ python setup.py install
 * crackid /both/directories /and/individual/books.cbz
 
 The crackid program currently only supports console ANSI output
+```
 
 # YACReaderLibrary Integration
 ```
@@ -43,6 +44,7 @@ The crackid program currently only supports console ANSI output
 * To use, first update your local comic library in the YACReaderLibrary, then EXIT, then run this.
 * It currently works by querying the YACReader database and returning a list of all the books that have no metadata aside from issue #.
 * If you specify the -u flag, it will update the record - otherwise it just uses the database for the files to process.
+```
 
 # crackid in use #
 ![In Action](https://github.com/btxgit/crackid/blob/master/crackid3.gif?raw=true)
