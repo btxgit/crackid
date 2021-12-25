@@ -75,7 +75,7 @@ class CleanCommand(Command):
         print("Removing garbage files...")
         self.clean_subdirs(basedir)
 
-inrel=['colorama==0.4.1', 'rarfile==3.1', 'docopt>=0.6.2']
+inrel=['colorama==0.4.4', 'rarfile>=3.1', 'docopt>=0.6.2']
 
 def build_config(**kw):
     bcfg = {}
