@@ -28,23 +28,26 @@ python setup.py install
 ```
 
 # Usage #
-```
 * crackid /path/to/comicfile.cbz
 * crackid /path/to.directory/containing/books
 * crackid -u -y /path/to/YACLibraryRoot
 * crackid /both/directories /and/individual/books.cbz
 
+```
 The crackid program currently only supports console ANSI output
 ```
 
 # YACReaderLibrary Integration
-```
-* It's experimental, so backup your YACROOM/.yacreaderlibrary/library.ydb file!
-* Purpose is to pull metadata from the ComicInfo files this program harvests, and update the YACReader database.
-* To use, first update your local comic library in the YACReaderLibrary, then EXIT, then run this.
-* It currently works by querying the YACReader database and returning a list of all the books that have no metadata aside from issue #.
-* If you specify the -u flag, it will update the record - otherwise it just uses the database for the files to process.
-```
+* It's experimental, so backup your YACROOM/.yacreaderlibrary/library.ydb
+  file!
+* Purpose is to pull metadata from the ComicInfo files this program
+  harvests, and update the YACReader database.
+* To use, first update your local comic library in the YACReaderLibrary,
+  then EXIT, then run this.
+* It currently works by querying the YACReader database and returning a list
+  of all the books that have no metadata aside from issue #.
+* If you specify the -u flag, it will update the record - otherwise it just
+  uses the database for the files to process.
 
 # crackid in use #
 ![In Action](https://github.com/btxgit/crackid/blob/master/crackid3.gif?raw=true)
