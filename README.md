@@ -18,8 +18,8 @@ crackid is a Python3 class library designed to work with comic book .cbr and .cb
 
 * Python 3.6+
 * Python dependencies
-  * colorama==0.4.1
-  * rarfile==3.1
+  * colorama==0.4.4
+  * rarfile>=3.1
   * docopt>=0.6.2
 
 # Installation #
@@ -31,9 +31,18 @@ python setup.py install
 ```
 * crackid /path/to/comicfile.cbz
 * crackid /path/to.directory/containing/books
+* crackid -u -y /path/to/YACLibraryRoot
 * crackid /both/directories /and/individual/books.cbz
 
 The crackid program currently only supports console ANSI output
 
+# YACReaderLibrary Integration
+```
+* It's experimental, so backup your YACROOM/.yacreaderlibrary/library.ydb file!
+* Purpose is to pull metadata from the ComicInfo files this program harvests, and update the YACReader database.
+* To use, first update your local comic library in the YACReaderLibrary, then EXIT, then run this.
+* It currently works by querying the YACReader database and returning a list of all the books that have no metadata aside from issue #.
+* If you specify the -u flag, it will update the record - otherwise it just uses the database for the files to process.
+
 # crackid in use #
-![In Action](crackid3.gif)
+![In Action](https://github.com/btxgit/crackid/blob/master/crackid3.gif?raw=true)
