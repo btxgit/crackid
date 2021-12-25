@@ -38,7 +38,7 @@ The crackid program currently only supports console ANSI output
 ```
 
 # YACReaderLibrary Integration
-* It's experimental, so backup your YACROOM/.yacreaderlibrary/library.ydb
+* It's experimental, so backup your YACROOT/.yacreaderlibrary/library.ydb
   file!
 * Purpose is to pull metadata from the ComicInfo files this program
   harvests, and update the YACReader database.
