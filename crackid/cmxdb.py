@@ -86,3 +86,4 @@ class cmxdb(object):
             if isinstance(val, list):
                 val = '\n'.join(val)
             self.doc[k] = val.strip()
+

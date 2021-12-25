@@ -17,7 +17,7 @@ def yaclist(base, **kwargs):
 #    print(kwargs)
     base = base.rstrip(os.sep)
     verbose = False
-    
+
     if 'verbose' in kwargs:
         verbose = kwargs['verbose']
 
@@ -43,7 +43,7 @@ def yaclist(base, **kwargs):
     with sqlite3.connect(db_path) as con:
         cur = con.cursor()
         sql = '''SELECT id, parentid, path FROM folder WHERE %snumChildren > 0 AND path is not null;''' % dirsql
-        
+
         if verbose:
             print(f"Using SQL: {sql}")
             print(f"Using args: {dirparam}")
@@ -103,10 +103,10 @@ def update_library(db_path, id, updates):
                                 updates[k1n] = int(updates[k1n], 10)
             upds.append(f'{k2n}=?')
             vals.append(updates[k1n])
-    
+
     if len(upds) == 0:
         return
-    
+
     updstr = ', '.join(upds)
     sql = f'UPDATE comic_info SET {updstr} WHERE id=?;'
     vals.append(id)
@@ -120,3 +120,4 @@ if __name__ == '__main__':
     gen = yaclist(comic_dir, subpath='/pat/to/Comics/2021-01-14/')
     for fp in gen:
         print(fp)
+

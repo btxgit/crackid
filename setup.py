@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-            
+
 import os
 import re, sys
 from setuptools import setup, find_packages
@@ -56,7 +56,7 @@ class CleanCommand(Command):
                     if fn.endswith(chk_sfx):
                         do_rm = True
                         break
-                
+
                 if do_rm:
                     rmpath = os.path.join(rdir, fn)
                     print("Unlink path: {}".format(rmpath))
@@ -79,12 +79,12 @@ inrel=['colorama==0.4.4', 'rarfile>=3.1', 'docopt>=0.6.2']
 
 def build_config(**kw):
     bcfg = {}
-    
+
     for k in kw:
         bcfg[k] = kw[k]
-    
+
     return bcfg
-    
+
 with open('crackid/__init__.py', 'rb') as fd:
     s = fd.read().decode('utf-8')
 
@@ -92,7 +92,7 @@ pat = re.search(r'''__version__\s*=\s*\'([^\']+)\'''', s)
 if not pat:
     print("Unable to determine the verison number from the __init__.py file.")
     sys.exit(1)
-    
+
 cid_ver = pat.group(1)
 
 bcfg = build_config(
@@ -111,3 +111,4 @@ bcfg = build_config(
 )
 
 setup(zip_safe=False, cmdclass={ 'distclean': CleanCommand, 'stripspaces': StripSpaces }, **bcfg)
+
