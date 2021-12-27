@@ -28,20 +28,40 @@ class cmxdb(object):
                        'asin': (r'\[ASIN([A-Z0-9]{10})\]', 'https://www.amazon.com/dp/{}', 'Amazon Standard Identification Number')
                        }
 
-    def parse_xml_str(self, xmlstr):
+    def parse_xml_str(self, xmlstr1):
         ''' parses <xmlstr> into json doc self.doc, where it can
             be processed and shipped off to market
         '''
 
         self.doc = {}
 
+        try:
+            xmlstr1 = xmlstr1.decode('utf-8')
+        except Exception as e:
+            print("[Error] Caught exception while trying to decdode XML:", e)
+            return
+
         # Fix up broken ComicInfo files - for some reason, the ampersand
-        # isn't escaped sometimes.
-        if b'& ' in xmlstr:
-            xmlstr = xmlstr.replace(b'& ', b'&amp; ')
+        # isn't escaped sometimes.  ALso remove illegal XML characters.
+        if '& ' in xmlstr1:
+            xmlstr1 = xmlstr.replace('& ', '&amp; ')
+
+        xmlstr = ''
+
+        for cs in xmlstr1:
+            c = ord(cs)
+            if (c == 0x9) or (c == 0xA) or (c == 0xD) or ((c >= 0x20) and (c <= 0xD7FF)) or ((c >= 0xE000) and (c <= 0xFFFD)) or ((c >= 0x10000) and (c <= 0x10FFFF)):
+                xmlstr += cs
+            else:
+                print("[Error] Stripping illegalUnicode codepoint for XML (%04x)" % c)
 
         # Parse XML
-        self.root = ET.fromstring(xmlstr)
+
+        try:
+            self.root = ET.fromstring(xmlstr)
+        except Exception as e:
+            print("XML Parse Error:", e)
+            return
 
         # Pull in every tag- they vary too much to whitelist
         for cinf in self.root.findall('.'):
@@ -86,4 +106,5 @@ class cmxdb(object):
             if isinstance(val, list):
                 val = '\n'.join(val)
             self.doc[k] = val.strip()
+
 

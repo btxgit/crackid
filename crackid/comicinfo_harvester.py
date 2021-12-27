@@ -12,6 +12,7 @@ from .procarch import procarch
 from pprint import pprint
 import json
 from .console_output import console_output
+from shutil import get_terminal_size
 from .yactools import yaclist, update_library
 from time import time
 
@@ -43,6 +44,8 @@ class comicinfo_harvester(object):
         j = {'filename': os.path.basename(fullpath)}
         outjson = self.args['-j']
         outxml = self.args['-r']
+
+
 
         if self.procarch.open_archive(fullpath):
             xmlstr = self.procarch.extract_comicinfo()
@@ -132,6 +135,10 @@ class comicinfo_harvester(object):
 
         if outjson:
             print("[")
+            
+        spin = ["⠋","⠙","⠹","⠸","⠼","⠴","⠦","⠧","⠇","⠏"]
+        n = 0
+        ndirs = nfiles = 0
         for basedir in self.pathlist:
             if os.path.isfile(basedir):
                 self.proc_file(basedir, None)
@@ -139,7 +146,6 @@ class comicinfo_harvester(object):
 
             if not os.path.isdir(basedir):
                 continue
-            nfiles = 0
             if self.args['-y']:
 #                print(f"Preparing generatrix with root: {self.args['-y']} and subpath: {basedir}")
                 gen = self.walkgen(self.args['-y'], subpath=basedir, verbose=self.verbose)
@@ -163,8 +169,15 @@ class comicinfo_harvester(object):
                     nfiles += 1
                     if bdp == '':
                         bdp = os.sep
-                    sys.stdout.write("    [%08d] %s\r" % (nfiles, bdp))
+                    ts = get_terminal_size()
+                    clr = ts.columns * ' '
+                    sys.stdout.write("\r%s\r%s   Dirs: %d, Fiiles: %d" % (clr, spin[n], ndirs, nfiles))
+                    n += 1
+                    if n >= len(spin):
+                        n = 0
+                        
                     sys.stdout.flush()
+                ndirs += 1
         if outjson:
             print("]")
 
@@ -174,5 +187,7 @@ class comicinfo_harvester(object):
             pct = '{}%'.format(round(self.num_cinfo/self.num_books * 10000) / 100.0)
         else:
             pct = "N/A"
+        print
         self.out.color_pairs([('Total # Files', self.num_files), ('Books', self.num_books), ('ComicInfo files', self.num_cinfo), ('Pct. with XML', pct)])
+
 

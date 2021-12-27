@@ -30,7 +30,7 @@ class console_output(object):
         linec = '⎺'
         botline = linec * (ts.columns)
         tline = linec*(ts.columns)
-        sys.stdout.write(Fore.YELLOW + Style.NORMAL + topline + Style.RESET_ALL)
+        sys.stdout.write("\r" + Fore.YELLOW + Style.NORMAL + topline + Style.RESET_ALL)
         sys.stdout.write("\n{}{}{}{}{}\n".format(Style.BRIGHT + Back.BLUE + Fore.WHITE, padlstr, title, padrstr, Style.RESET_ALL))
         sys.stdout.write('{}{}{}\n'.format(Fore.YELLOW + Style.NORMAL, botline, Style.RESET_ALL))
         sys.stdout.flush()
@@ -58,7 +58,7 @@ class console_output(object):
         linetop = linec * ts.columns
         linec = '⎺'
         linebot = linec * ts.columns
-        sys.stdout.write('{}{}\n'.format(Fore.WHITE + Style.NORMAL, linetop))
+        sys.stdout.write('\n{}{}\n'.format(Fore.WHITE + Style.NORMAL, linetop))
         sys.stdout.write('{}{}{}{}{}\n'.format(Back.WHITE + Style.NORMAL, ' ' * padl, olstr, ' ' * padr, Style.RESET_ALL))
         sys.stdout.write('{}{}\n'.format(Fore.WHITE + Style.NORMAL, linebot))
         sys.stdout.flush()
@@ -110,6 +110,3 @@ class console_output(object):
                 outstr = fmtstr2.format(' ' * attrib_width, aval_color, sep, line, close_color)
             sys.stdout.write(outstr)
             sys.stdout.flush()
-
-
-
