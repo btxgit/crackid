@@ -14,11 +14,15 @@ crackid - ComicRack ID Library and Utility
 
 crackid is a Python3 class library designed to work with comic book .cbr and .cbz files that have ComicInfo.xml files, as produced by by the software ComicRack.  These xml files contain various pieces of metadata about the cbr/cbz file.  It is a widely held belief that these files should only be added by the creator of the content.  This class will allow you to read the files, but it will not allow writing to them.
 
+It will, however, allow you to update the libraries of YACReader.  Hopefully, that makes what should be a fantastic tool a bit more usable.
+
+There is also a new feature - it will display the cover in the terminal right next the metadata.  There's is one big caveat, however - that code is macOS (really iTerm2) only.  I'll be working on getting it to support the other "image in terminal" protocols.
+
 # Requirements #
 
 * Python 3.6+
 * Python dependencies
-  * colorama==0.4.4
+  * blessed>=1.19.0
   * rarfile>=3.1
   * docopt>=0.6.2
 
@@ -31,6 +35,7 @@ python setup.py install
 * crackid /path/to/comicfile.cbz
 * crackid /path/to.directory/containing/books
 * crackid -u -y /path/to/YACLibraryRoot
+* crackid -c /path/to/your/comics
 * crackid /both/directories /and/individual/books.cbz
 
 ```
@@ -51,3 +56,7 @@ The crackid program currently only supports console ANSI output
 
 # crackid in use #
 ![In Action](https://github.com/btxgit/crackid/blob/master/crackid3.gif?raw=true)
+
+# New cover view feature
+![Shiny](https://github.com/btxgit/crackid/blob/master/crackid4.gif?raw=true)
+

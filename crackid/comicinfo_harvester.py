@@ -28,6 +28,36 @@ class comicinfo_harvester(object):
         self.walkgen = yaclist if self.args['-y'] else os.walk
         self.verbose = self.args['-v']
 
+
+    def proc_xml(self, fullpath, xmlstr, outxml, outjson):
+        j = {'filename': os.path.basename(fullpath)}
+        self.cmxdb.parse_xml_str(xmlstr)
+
+        if outxml:
+            xmlstr = xmlstr.decode('utf-8')
+            print(xmlstr)
+
+        for k in sorted(self.cmxdb.doc.keys(), key=lambda x: x.lower()):
+            if k.lower() == 'comicinfo':
+                continue
+            val = self.cmxdb.doc[k]
+            if val is None:
+                continue
+
+            if not isinstance(val, str):
+                val = str(val)
+
+            val = val.strip()
+            if val == '':
+                continue
+
+            if not outjson and not outxml:
+                self.out.output_attrib(k, val)
+            j[k] = val
+
+
+        return j
+
     def proc_cinfo(self, fullpath, id):
 
         ''' Checks to see if fullpath is an archive.  If so, it checks to
@@ -40,50 +70,33 @@ class comicinfo_harvester(object):
 
             Returns: dict containing the attributees or None
         '''
-
-        j = {'filename': os.path.basename(fullpath)}
+        j = None
         outjson = self.args['-j']
         outxml = self.args['-r']
-
-
+        outcov = self.args['-c']
+        xmlstr = cov = None
 
         if self.procarch.open_archive(fullpath):
-            xmlstr = self.procarch.extract_comicinfo()
+            fn = os.path.basename(fullpath)
+
+            self.out.prepare_newbook()
+            if not outjson:
+                self.out.center_title(fn)
+            xmlstr, cov = self.procarch.extract_comicinfo(self.args['-c'])
+            if outcov and cov is not None:
+                if fn is None:
+                    fn = os.path.basename(fullpath)
+                self.out.disp_cov(cov, fn)
+
             if xmlstr is None:
                 if self.verbose:
                     print(f"No comicinfo.xml file in {fullpath}")
-                return None
-
+            else:
+                j = self.proc_xml(fullpath, xmlstr, outxml, outjson)
             if outjson and self.num_cinfo > 0:
                 print(',')
             self.num_cinfo += 1
-            fn = os.path.basename(fullpath)
 
-            if not outjson:
-                self.out.center_title(fn)
-
-            self.cmxdb.parse_xml_str(xmlstr)
-
-            if outxml:
-                xmlstr = xmlstr.decode('utf-8')
-                print(xmlstr)
-
-            for k in sorted(self.cmxdb.doc.keys(), key=lambda x: x.lower()):
-                if k.lower() == 'comicinfo':
-                    continue
-                val = self.cmxdb.doc[k]
-                if val is None:
-                    continue
-                if not isinstance(val, str):
-                    val = str(val)
-
-                val = val.strip()
-                if val == '':
-                    continue
-
-                if not outjson and not outxml:
-                    self.out.output_attrib(k, val)
-                j[k] = val
         else:
             print(f"Error: Unable to open archive: {fullpath}")
             return None
@@ -96,6 +109,7 @@ class comicinfo_harvester(object):
             db_rel = '.yacreaderlibrary/library.ydb'
             db_path = os.path.join(dbbase, db_rel)
             update_library(db_path, id, j)
+
 
         return j
 
@@ -135,7 +149,7 @@ class comicinfo_harvester(object):
 
         if outjson:
             print("[")
-            
+
         spin = ["⠋","⠙","⠹","⠸","⠼","⠴","⠦","⠧","⠇","⠏"]
         n = 0
         ndirs = nfiles = 0
@@ -175,7 +189,7 @@ class comicinfo_harvester(object):
                     n += 1
                     if n >= len(spin):
                         n = 0
-                        
+
                     sys.stdout.flush()
                 ndirs += 1
         if outjson:
@@ -188,6 +202,8 @@ class comicinfo_harvester(object):
         else:
             pct = "N/A"
         print
-        self.out.color_pairs([('Total # Files', self.num_files), ('Books', self.num_books), ('ComicInfo files', self.num_cinfo), ('Pct. with XML', pct)])
+        self.out.color_pairs([('Total # Files', self.num_files), ('Books', self.num_books), ('ComicInfo.xml files', self.num_cinfo), ('Pct. with XML', pct)])
+
+
 
 

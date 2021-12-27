@@ -8,12 +8,13 @@ r'''
 ----comic-rack-id-util-by-btx----
 
 Usage:
-  crackid [-j | -r] [-v] PATH...
-  crackid [-j | -r] [-u] [-v] -y YACROOT [PATH...]
+  crackid [-c] [-j | -r] [-v] PATH...
+  crackid [-c] [-j | -r] [-u] [-v] -y YACROOT [PATH...]
   crackid -h || crackid --help
 
 Options:
   -h|--help      Show this screen
+  -c             Display the cover [for iTerm2 only currently]
   -j             Display as JSON
   -r             Display as raw
   -u             Update YACReader database
@@ -24,6 +25,7 @@ Options:
 
 import os
 import sys
+import platform
 from crackid import comicinfo_harvester
 from colorama import init
 from docopt import docopt
@@ -33,6 +35,11 @@ init()
 
 def main():
     args = docopt(__doc__, version=__version__)
+
+    if args['-c']:
+        if 'LC_TERMINAL' not in os.environ or os.environ['LC_TERMINAL'] != 'iTerm2':
+            print("[Error] Unable to use the -c functionality on non-iTerm2 terminals.")
+            sys.exit(1)
 
     if len(args['PATH']) == 0:
         if not args['-y']:
@@ -47,5 +54,7 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
 
 

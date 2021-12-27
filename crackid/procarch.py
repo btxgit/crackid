@@ -8,6 +8,8 @@ comic rack id class prototype btx
 import os
 import zipfile
 import rarfile
+from io import BytesIO
+from PIL import Image
 from colorama import Fore, Back, Style
 
 class procarch(object):
@@ -37,13 +39,30 @@ class procarch(object):
             return False
         return True
 
-    def extract_comicinfo(self):
+    def is_image(self, fn):
+        ext = fn.lower()[-4:]
+        return ext in ['.jpg', 'jpeg', '.gif', '.png']
+
+    def extract_comicinfo(self, get_cover=False):
+        fnl = []
+        cmxml = None
+        cov = None
+
         for ti in self.ao.infolist():
             if os.path.basename(ti.filename).lower() == 'comicinfo.xml':
                 with self.ao.open(ti, 'r') as archread:
-                    return archread.read()
-        return None
+                    cmxml = archread.read()
+            elif self.is_image(ti.filename):
+                fnl.append(ti.filename)
 
+        if get_cover and len(fnl) > 0:
+            fnl = sorted(fnl)
+            ti = fnl[0]
+            with self.ao.open(ti, 'r') as archread:
+                cov = BytesIO(archread.read())
 
+            return cmxml, cov
+
+        return cmxml
 
 

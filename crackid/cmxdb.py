@@ -108,3 +108,5 @@ class cmxdb(object):
             self.doc[k] = val.strip()
 
 
+
+
