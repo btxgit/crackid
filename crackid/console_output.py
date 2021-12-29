@@ -12,6 +12,8 @@ from shutil import get_terminal_size
 import subprocess
 import platform
 import re
+import warnings
+warnings.simplefilter("ignore")
 from PIL import Image
 from io import BytesIO
 import base64
@@ -19,17 +21,76 @@ import math
 from textwrap import TextWrapper
 import blessed
 
+def kitty_image(data):
+    from base64 import standard_b64encode
+
+    def serialize_gr_command(**cmd):
+        payload = cmd.pop('payload', None)
+        cmd = ','.join('{}={}'.format(k, v) for k, v in cmd.items())
+        ans = []
+        w = ans.append
+        w(b'\033_G'), w(cmd.encode('ascii'))
+        if payload:
+            w(b';')
+            w(payload)
+        w(b'\033\\')
+        return b''.join(ans)
+
+
+    def write_chunked(**cmd):
+        data = standard_b64encode(cmd.pop('data'))
+        while data:
+            chunk, data = data[:4096], data[4096:]
+            m = 1 if data else 0
+            sys.stdout.buffer.write(serialize_gr_command(payload=chunk, m=m,
+                                                        **cmd))
+            sys.stdout.flush()
+            cmd.clear()
+        sys.stdout.buffer.write(b"\n")
+        sys.stdout.flush()
+
+    write_chunked(a='T', f=100, data=data)
+
+
 class console_output(object):
     ''' TODO: turn into a usable class
     '''
     def __init__(self, args):
         self.args = args
+
+        if os.environ['TERM'] == 'xterm-kitty':
+            self.imgterm = 'kitty'
+        else:
+            self.imgterm = 'iterm2'
+        
+        self.args = args
         self.term = blessed.Terminal()
+        if self.term.number_of_colors < 256:
+            print("Got just %d colors" % self.term.number_of_colors)
+            sys.exit(1)
         self.starty = None
         self.startx = None
         osver, _, arch =platform.mac_ver()
         self.is_macos = osver is not None and osver != ''
-        print("\n\n\n\n\n\n\n\n\n\n\n")
+        if self.args['-g'] is not None:
+            if 'x' not in self.args['-g']:
+                print("[Error] The geometry must be specified in the form wxh  - example:  640x480")
+                sys.exit(1)
+                
+            self.scwid, self.scht = [ int(sci, 10) for sci in self.args['-g'].lower().split('x') ]
+        elif self.is_macos:
+            self.scwid, self.scht = self.macos_get_pixwidth()
+            self.scht -= 35
+        else:
+            print("[Error] The window geometry must be specified in order to display a cover.")
+            sys.exit(1)
+            
+        print(self.term.clear)
+        ts = get_terminal_size()
+# Get how many pixels per character
+        self.ppc_w = self.scwid / ts.columns
+        self.ppc_h = self.scht / ts.lines
+        print(self.term.move_yx(ts.lines-1, 0))
 
     def prepare_newbook(self):
         ''' This needs to exist because the attribute drawing code is called
@@ -42,25 +103,32 @@ class console_output(object):
 
     def center_title(self, title):
         ts = get_terminal_size()
-        pat = re.search(r'(.+) \(Digital\).+$', title, re.I)
-        if pat is not None:
-            title = pat.group(1)
+
+        if self.args['-F']:
+            pat = re.search(r'(.+) \((Digital|Webrip)\).+$', title, re.I)
+            if pat is not None:
+                title = pat.group(1)
+
         tl = len(title)
         padl = round((ts.columns - tl) / 2)
         padr = ts.columns - (padl + tl)
         padlstr = ' ' * padl
         padrstr = ' ' * padr
         linec = '⎽'
+        linec = chr(0x2582)
         topline = linec * (ts.columns)
         linec = '⎺'
+        linec = chr(0x2594)
         botline = linec * (ts.columns)
         tline = linec*(ts.columns)
-        sys.stdout.write("\r" + self.term.bright_yellow_on_black + topline + self.term.normal)
-        sys.stdout.write("%s\n" % self.term.white_on_blue + padlstr + title + padrstr + self.term.normal)
-        sys.stdout.write('%s\n' % (self.term.bright_yellow_on_black + botline + self.term.normal))
+        sys.stdout.write("\r" + self.term.blue_on_black + topline + self.term.normal)
+        sys.stdout.write("%s\n" % self.term.bold + self.term.bright_white_on_darkblue + padlstr + title + padrstr + self.term.normal)
+        sys.stdout.write('%s\n' % (self.term.blue_on_black + botline + self.term.normal))
         sys.stdout.flush()
 
     def macos_get_pixwidth(self):
+        ''' Call applescript to get the pixel width & height of the current active iterm2 window
+        '''
         cmd = ['/usr/bin/osascript', '-e', '''tell application "iTerm2" to get the bounds of the front window''']
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         outs, errs = p.communicate()
@@ -79,35 +147,23 @@ class console_output(object):
               get the current windows' dimensions in pixels.
             - For now, this method will fail on non-Macs
         '''
-        if not self.is_macos:
-            print("This is not running on macOS, which is the only supported platform for use with the -c (display cover) feature.")
-            sys.exit(1)
-
-# Get # of chars wide / lines high
-        ts = get_terminal_size()
 # Open cover img in pillow so we can generate a thumbnail-sized image
         im = Image.open(cov)
-# Call applescript to get the pixel width & height of the current active iterm2 window
-        scwid, scht = self.macos_get_pixwidth()
 
 # Work out the cover's A/R
         w = im.width
         h = im.height
-        fmt = im.format
         ratio = (w * 1.0) / h
 # Normalize on 320px high unless the cover is shorter
         th = 320
         if (th > h):
             th = h
         tw = int(round(th * ratio))
-# Get how many pixels per character
-        ppc_w = scwid / ts.columns
-        ppc_h = scht / ts.lines
 
-#        print(f"((scwid: {scwid} - tw: {tw}) / 2) // ppc_w: {ppc_w}")
+#        print(f"((scwid: {self.scwid} - tw: {tw}) / 2) // self.ppc_w: {self.ppc_w}")
 # Use that info  to figure out how to position properly
-        nc = math.ceil(tw / ppc_w)
-        nch = math.ceil(th / ppc_h) + 1
+        nc = math.ceil(tw / self.ppc_w)
+        nch = math.ceil(th / self.ppc_h)
 
         self.starty, self.startx = self.term.get_location()
         self.starty -= nch
@@ -120,7 +176,15 @@ class console_output(object):
         io = BytesIO()
 
         with BytesIO() as ofd:
+            if self.imgterm == 'kitty':
+                fmt = 'PNG'
+            else:
+                fmt = im.format
             im.save(ofd, format=fmt)
+            if self.imgterm == 'kitty':
+                kitty_image(ofd.getvalue())
+                return
+
             d = base64.b64encode(ofd.getvalue())
 # Write result to a BytesIO()
 
@@ -147,8 +211,8 @@ class console_output(object):
             if not isinstance(val, str):
                 val = str(val)
 
-            kstr = self.term.black_on_white + '{}{}'.format(key, keysep)
-            vstr = self.term.black_on_white + '{}'.format(val)
+            kstr = self.term.bold + self.term.black_on_white + '{}{}'.format(key, keysep)
+            vstr = self.term.bold + self.term.black_on_white + '{}'.format(val)
             kvlen += (len(key) + len(keysep) + len(val))
             olist.append('{}{}'.format(kstr, vstr))
         olstr = sepstr.join(olist)
@@ -169,8 +233,8 @@ class console_output(object):
         '''
         if val is None:
             return
-        aname_color = self.term.magenta
-        aval_color = self.term.bright_magenta
+        aname_color = self.term.darkmagenta
+        aval_color = self.term.bold + self.term.bright_magenta
         close_color = self.term.normal
         attrib_width = 18
         if self.startx is None:
@@ -226,5 +290,3 @@ class console_output(object):
             else:
                 sys.stdout.write(outstr)
                 sys.stdout.flush()
-
-
