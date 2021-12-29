@@ -16,7 +16,7 @@ crackid is a Python3 class library designed to work with comic book .cbr and .cb
 
 It will, however, allow you to update the libraries of YACReader.  Hopefully, that makes what should be a fantastic tool a bit more usable.
 
-There is also a new feature - it will display the cover in the terminal right next the metadata.  There's is one big caveat, however - that code is macOS (really iTerm2) only.  I'll be working on getting it to support the other "image in terminal" protocols.
+There is also a new feature - it will display the cover in the terminal right next the metadata.  And good news to all of you who wanted this to be usable on Linux - now there is support for kitty (https://sw.kovidgoyal.net/kitty/)
 
 # Requirements #
 
@@ -25,6 +25,10 @@ There is also a new feature - it will display the cover in the terminal right ne
   * blessed>=1.19.0
   * rarfile>=3.1
   * docopt>=0.6.2
+
+# Good to Haves... #
+
+* iTerm2 on MacOS, or kitty on Linux / MacOS
 
 # Installation #
 ```
