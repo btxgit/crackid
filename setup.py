@@ -111,6 +111,3 @@ bcfg = build_config(
 )
 
 setup(zip_safe=False, cmdclass={ 'distclean': CleanCommand, 'stripspaces': StripSpaces }, **bcfg)
-
-
-

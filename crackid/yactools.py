@@ -120,7 +120,3 @@ if __name__ == '__main__':
     gen = yaclist(comic_dir, subpath='/pat/to/Comics/2021-01-14/')
     for fp in gen:
         print(fp)
-
-
-
-
