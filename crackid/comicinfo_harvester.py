@@ -80,9 +80,11 @@ class comicinfo_harvester(object):
             fn = os.path.basename(fullpath)
 
             self.out.prepare_newbook()
-            if not outjson:
-                self.out.center_title(fn)
             xmlstr, cov = self.procarch.extract_comicinfo(self.args['-c'])
+
+            if (xmlstr is not None and not outjson) or (outcov and cov is not None):
+                self.out.center_title(fn)
+
             if outcov and cov is not None:
                 if fn is None:
                     fn = os.path.basename(fullpath)
@@ -93,9 +95,11 @@ class comicinfo_harvester(object):
                     print(f"No comicinfo.xml file in {fullpath}")
             else:
                 j = self.proc_xml(fullpath, xmlstr, outxml, outjson)
+
             if outjson and self.num_cinfo > 0:
                 print(',')
-            self.num_cinfo += 1
+            if j is not None:
+                self.num_cinfo += 1
 
         else:
             print(f"Error: Unable to open archive: {fullpath}")
@@ -203,7 +207,3 @@ class comicinfo_harvester(object):
             pct = "N/A"
         print
         self.out.color_pairs([('Total # Files', self.num_files), ('Books', self.num_books), ('ComicInfo.xml files', self.num_cinfo), ('Pct. with XML', pct)])
-
-
-
-

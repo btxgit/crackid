@@ -44,7 +44,7 @@ class cmxdb(object):
         # Fix up broken ComicInfo files - for some reason, the ampersand
         # isn't escaped sometimes.  ALso remove illegal XML characters.
         if '& ' in xmlstr1:
-            xmlstr1 = xmlstr.replace('& ', '&amp; ')
+            xmlstr1 = xmlstr1.replace('& ', '&amp; ')
 
         xmlstr = ''
 
@@ -106,6 +106,7 @@ class cmxdb(object):
             if isinstance(val, list):
                 val = '\n'.join(val)
             self.doc[k] = val.strip()
+
 
 
 

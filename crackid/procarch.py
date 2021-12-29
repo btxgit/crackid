@@ -61,8 +61,7 @@ class procarch(object):
             with self.ao.open(ti, 'r') as archread:
                 cov = BytesIO(archread.read())
 
-            return cmxml, cov
+        return cmxml, cov
 
-        return cmxml
 
 
