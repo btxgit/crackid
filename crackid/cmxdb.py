@@ -25,7 +25,8 @@ class cmxdb(object):
                        'isbn': (r'\[ISBN(\d{13})\]', 'https://www.amazon.com/gp/search/ref=sr_adv_b/?search-alias=stripbooks&unfiltered=1&field-keywords=&field-author=&field-title=&field-isbn={}', 'International Standard Book Number'),
                        'gcd': (r'\[GCD(\d+)\]', 'https://www.comics.org/issue/{}/', 'Grand Comics Database'),
                        'dmdnum': (r'\[DMDDB([A-Z]{3}\d+)\]', 'https://www.previewsworld.com/Catalog/{}', 'Diamond Number'),
-                       'asin': (r'\[ASIN([A-Z0-9]{10})\]', 'https://www.amazon.com/dp/{}', 'Amazon Standard Identification Number')
+                       'asin': (r'\[ASIN([A-Z0-9]{10})\]', 'https://www.amazon.com/dp/{}', 'Amazon Standard Identification Number'),
+                       'dcui': (r'\[DCUI\[?([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\]', 'https://www.dcuniverseinfinite.com/comics/book/crack/{}/c', 'DC Universe Infinite UUID')
                        }
 
     def parse_xml_str(self, xmlstr1):
@@ -86,6 +87,7 @@ class cmxdb(object):
             for k in self.idfind.keys():
                 rexp = self.idfind[k][0]
                 fmt = self.idfind[k][1]
+#                print("regex:", rexp)
                 pat = re.search(rexp, self.doc['Notes'], re.I)
                 if pat is not None:
                     self.doc[k] = pat.group(1)
@@ -106,8 +108,3 @@ class cmxdb(object):
             if isinstance(val, list):
                 val = '\n'.join(val)
             self.doc[k] = val.strip()
-
-
-
-
-
