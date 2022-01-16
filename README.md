@@ -12,11 +12,43 @@ crackid - ComicRack ID Library and Utility
 
 # Introduction #
 
-crackid is a Python3 class library designed to work with comic book .cbr and .cbz files that have ComicInfo.xml files, as produced by by the software ComicRack.  These xml files contain various pieces of metadata about the cbr/cbz file.  It is a widely held belief that these files should only be added by the creator of the content.  This class will allow you to read the files, but it will not allow writing to them.
+crackid is a Python3 class library designed to work with comic book .cbr and
+.cbz files that have ComicInfo.xml files, as produced by by the software
+ComicRack.  These xml files contain various pieces of metadata about the
+cbr/cbz file.  It is a widely held belief that these files should only be
+added by the creator of the content.  This class will allow you to read the
+files, but it will not allow writing to them.
 
-It will, however, allow you to update the libraries of YACReader.  Hopefully, that makes what should be a fantastic tool a bit more usable.
+It will, however, allow you to update the libraries of YACReader.
+Hopefully, that makes what should be a fantastic tool a bit more usable.
 
-There is also a new feature - it will display the cover in the terminal right next the metadata.  And good news to all of you who wanted this to be usable on Linux - now there is support for kitty (https://sw.kovidgoyal.net/kitty/)
+There is also a new feature - it will display the cover in the terminal
+right next the metadata.  And good news to all of you who wanted this to be
+usable on Linux - now there is support for kitty
+(https://sw.kovidgoyal.net/kitty/) and WezTerm
+(https://wezfurlong.org/wezterm/).  Both seem to be exceptionally good
+termainls that are pushing terminal emulation ahead.
+
+This verison of crackid also supports Sixels, which are the legacy way to
+support raster graphics in a terminal window.  iTerm2 and WezTerm both
+support Sixels, as does XTerm - but you need to enable support for sixels at
+buildtime.  YMMV, please give it a shot if you're having trouble with cover
+view.
+
+If you don't care about the cover view fewtaure, pretty much any terminal will do.
+
+# Who is this For #
+
+* Do you have a seed box that you SSH into, and grab comics?  This is pretty
+  amazing for that scenario.
+* Are you looking for a tool to kick start your YACReaderLibrary?  This
+  program can help with that.
+* Are you looking for a way to dump a copy of all the ComicInfo.xml files in
+  a database?  This does that, although calling it "in a database" is
+  pushing it a bit.  Yes, it uses a database, but it converts the .XML file
+  into a JSON object, dumps it to a string, then writes it to the database
+  just like that - which can be useful if you plan to put the data in Mongo,
+  for example.  You have options.
 
 # Requirements #
 
@@ -28,7 +60,7 @@ There is also a new feature - it will display the cover in the terminal right ne
 
 # Good to Haves... #
 
-* iTerm2 on MacOS, or kitty on Linux / MacOS
+* iTerm2 on MacOS, or kitty or WezTerm on Linux / MacOS
 
 # Installation #
 ```
@@ -41,10 +73,24 @@ python setup.py install
 * crackid -u -y /path/to/YACLibraryRoot
 * crackid -c /path/to/your/comics
 * crackid /both/directories /and/individual/books.cbz
+* crackid -c --sixel /path/to/comics
 
 ```
-The crackid program currently only supports console ANSI output
+The crackid program is designed to support multiple output metods.  For now,
+we're sticking to the Console / Terminal emulation.
 ```
+
+# Issues #
+
+* Currently, I haven't come up with a good way of determining the height and
+  width of terminal windows - without the decorations / non-typeable
+  sections.  I allow somoene to specify this geometry with the -g flag.
+
+* There aren't too many Terminal programs that supprot all of the special
+  features of the terminals - 24-bit color and bitmap graphics in the
+  Termianl (as in, when you're SSH'd into a server, you can view the cover
+  and 24-bit color as long as you're using one of the supported Terminal
+  programs (iTerm, KiTTY, WezTerm support both).
 
 # YACReaderLibrary Integration
 * It's experimental, so backup your YACROOT/.yacreaderlibrary/library.ydb
@@ -63,4 +109,3 @@ The crackid program currently only supports console ANSI output
 
 # New cover view feature
 ![Shiny](https://github.com/btxgit/crackid/blob/master/crackid4.gif?raw=true)
-
