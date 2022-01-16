@@ -8,20 +8,22 @@ r'''
 ----comic-rack-id-util-by-btx----
 
 Usage:
-  crackid [-cFv] [-j | -r] [-g WxY] PATH...
-  crackid [-cFuv] [-j | -r] [-g WxY] -y YACROOT [PATH...]
+  crackid [-cFv] [-j | -r] [-D DBFILE] [-g WxY] [--sixel] PATH...
+  crackid [-cFuv] [-j | -r] [-D DB ] [-g WxY] [--sixel] -y YACROOT [PATH...]
   crackid -h || crackid --help
 
 Options:
   -h|--help      Show this screen
   -c             Display the cover [for iTerm2 only currently]
+  -D DB
   -F             Filename minimization - minimize the filename in some cases
-  -g WxY         Specify the width and height of your term window - do not include the decorations.  Use the wxy form like 320x240.
+  -g WxY         Specify the width and height of your term window - do not include the window decorations.  Use the wxy form like 320x240.
   -j             Display as JSON
   -r             Display as raw
   -u             Update YACReader database
   -v             Verbose mode - output debug info
   -y YACROOT     YAC (YACROOT must have the .yacreaderlibrary)
+  --sixel        Sixel support
   --version      Show the current version
 '''
 
@@ -39,7 +41,7 @@ def main():
     args = docopt(__doc__, version=__version__)
 
     if args['-c']:
-        if ('LC_TERMINAL' not in os.environ or os.environ['LC_TERMINAL'] != 'iTerm2') and os.environ['TERM'] != 'xterm-kitty':
+        if ('LC_TERMINAL' not in os.environ or os.environ['LC_TERMINAL'] != 'iTerm2') and (os.environ['TERM'] != 'xterm-kitty') and ('TERM_PROGRAM' not in os.environ or os.environ['TERM_PROGRAM'] != 'WezTerm'):
             print("[Error] Unable to use the -c functionality on non-iTerm2 terminals.")
             sys.exit(1)
 
@@ -49,7 +51,6 @@ def main():
             args['PATH'].append(base)
         else:
             args['PATH'].append(args['-y'])
-
     cih = comicinfo_harvester(args)
     cih.scan_dirs()
 
