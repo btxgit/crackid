@@ -11,12 +11,17 @@ from .cmxdb import cmxdb
 from .procarch import procarch
 from pprint import pprint
 import json
+import sqlite3
 from .console_output import console_output
 from shutil import get_terminal_size
 from .yactools import yaclist, update_library
 from time import time
 
 class comicinfo_harvester(object):
+    ''' Harvester's job is to decide on a source for a filelist generator
+        that will be used to locate files to process.
+    '''
+
     def __init__(self, args):
         self.args = args
 
@@ -27,15 +32,88 @@ class comicinfo_harvester(object):
         self.out = console_output(args)
         self.walkgen = yaclist if self.args['-y'] else os.walk
         self.verbose = self.args['-v']
+        self.db = None
+        self.cur_dir = None
+        self.cur_dirid = None
+        if self.args['-D'] is not None:
+            self.db = sqlite3.connect(self.args['-D'], isolation_level = 'DEFERRED')
+            sql = '''CREATE TABLE IF NOT EXISTS crackdb(dirid integer, filename TEXT, json text, PRIMARY KEY(dirid, filename));
+            CREATE TABLE IF NOT EXISTS dirs(dirid integer PRIMARY KEY autoincrement, directory TEXT not null);
+            CREATE UNIQUE INDEX IF NOT EXISTS dirname ON dirs(directory ASC);'''
+            self.db.executescript(sql)
+            self.db.commit()
 
+    def get_or_add_dirid(self, dir):
+        ''' Locate the dirid entry in the dirs table for this current
+            directory
+         '''
+
+# Simple 1 directory cache for the current directory
+        if self.cur_dir is not None and self.cur_dir == dir:
+            return self.cur_dirid
+
+        sql = 'SELECT dirid FROM dirs WHERE directory=?;'
+        t = (dir, )
+
+# Set the cached dir name.  DOnt forget to set the dirid when
+# we get it.
+        self.cur_dir = dir
+        for row in self.db.execute(sql, t):
+            dirid = row[0]
+            self.cur_dirid = dirid
+            return(dirid)
+
+# Must be a new entry.  Insert it and get the lastrowid
+        sql = 'INSERT INTO dirs(directory) VALUES (?);'
+        t = (dir, )
+
+        cur = self.db.execute(sql, t)
+        self.db.commit()
+        dirid = cur.lastrowid
+        self.cur_dirid = dirid
+        return dirid
+
+    def add_db(self, fullpath, doc):
+        ''' Split up fullpath, get the dirid, check if
+            it exists in the db, if so we're good.  If not,
+            insert it.
+        '''
+
+        fn = os.path.basename(fullpath)
+        dir = os.path.dirname(fullpath)
+        dirid = self.get_or_add_dirid(dir)
+
+        sql = 'SELECT COUNT(*) FROM crackdb WHERE (dirid=? AND filename=?);'
+        t = (dirid, fn)
+
+        cnt = 0
+        for row in self.db.execute(sql, t):
+            cnt = row[0]
+
+        if cnt > 0:
+            return
+
+        j = json.dumps(doc)
+        t = (dirid, fn, j)
+        sql = 'INSERT INTO crackdb(dirid, filename, json) VALUES(?, ?, ?);'
+        self.db.execute(sql, t)
+        self.db.commit()
 
     def proc_xml(self, fullpath, xmlstr, outxml, outjson):
+        ''' Parse xmlstr int oa JSON document, which
+            we pass to the db routines before arranging it
+            and ultimately displaying to screen.
+        '''
+
         j = {'filename': os.path.basename(fullpath)}
         self.cmxdb.parse_xml_str(xmlstr)
 
         if outxml:
             xmlstr = xmlstr.decode('utf-8')
             print(xmlstr)
+
+        if self.args['-D'] is not None:
+            self.add_db(fullpath, self.cmxdb.doc)
 
         for k in sorted(self.cmxdb.doc.keys(), key=lambda x: x.lower()):
             if k.lower() == 'comicinfo':
@@ -54,7 +132,6 @@ class comicinfo_harvester(object):
             if not outjson and not outxml:
                 self.out.output_attrib(k, val)
             j[k] = val
-
 
         return j
 
@@ -114,11 +191,9 @@ class comicinfo_harvester(object):
             db_path = os.path.join(dbbase, db_rel)
             update_library(db_path, id, j)
 
-
         return j
 
     def proc_file(self, fullpath, id):
-
         ''' Called for each file we want to process.  Does a little sanity
             checking vs.  the file, then calls self.proc_cinfo().
 
@@ -145,9 +220,10 @@ class comicinfo_harvester(object):
         return (j is not None)
 
     def scan_dirs(self):
-        ''' the outside of the loop... for each self.pathlist (the PATH args on the cmdline),..
-
+        ''' the outside of the loop...  for each self.pathlist (the PATH
+            args on the cmdline),..
         '''
+
         self.num_files = self.num_books = self.num_cinfo = 0
         outjson = self.args['-j']
 
@@ -157,6 +233,10 @@ class comicinfo_harvester(object):
         spin = ["⠋","⠙","⠹","⠸","⠼","⠴","⠦","⠧","⠇","⠏"]
         n = 0
         ndirs = nfiles = 0
+
+        if self.args['-v']:
+            print(f"pathlist: {self.pathlist}")
+
         for basedir in self.pathlist:
             if os.path.isfile(basedir):
                 self.proc_file(basedir, None)
