@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+
+
 r'''
                    __     _    __
  ___________ _____/ /__  (_)__/ /
@@ -51,6 +54,43 @@ def kitty_image(data):
 
     write_chunked(a='T', f=100, data=data)
 
+def output_sixel(data, im, tw, th):
+    from libsixel import sixel_dither_initialize, sixel_dither_set_palette, sixel_dither_new, SIXEL_BUILTIN_G8, SIXEL_BUILTIN_G1, SIXEL_PIXELFORMAT_RGB888, SIXEL_PIXELFORMAT_RGBA8888, sixel_encode, sixel_dither_unref, sixel_output_new, sixel_dither_get, sixel_dither_set_pixelformat, SIXEL_PIXELFORMAT_PAL8, SIXEL_PIXELFORMAT_G8, SIXEL_PIXELFORMAT_G1
+    s = BytesIO()
+    if im.mode == 'P':
+        im2 = im.convert('RGB')
+        im = im2
+
+    im.thumbnail(size=(tw, th), resample=Image.LANCZOS)
+    data = im.tobytes()
+    output = sixel_output_new(lambda data, s : s.write(data), s)
+
+
+    if im.mode == 'RGB':
+        dither = sixel_dither_new(256)
+        sixel_dither_initialize(dither, data, tw, th, SIXEL_PIXELFORMAT_RGB888)
+    elif im.mode == 'RGBA':
+        dither = sixel_dither_new(256)
+        sixel_dither_initialize(dither, data, tw, th, SIXEL_PIXELFORMAT_RGBA8888)
+
+    elif im.mode == 'P':
+        print("Its broken")
+        sys.exit(1)
+        palette = im.getpalette()
+        print(">>", type(palette), "<<")
+        dither = sixel_dither_new(256)
+        print(">>", type(dither), "<< ")
+        sixel_dither_set_palette(dither, palette)
+        sixel_dither_set_pixelformat(dither, SIXEL_PIXELFORMAT_PAL8)
+    elif im.mode == 'L':
+        dither = sixel_dither_get(SIXEL_BUILTIN_G8)
+        sixel_dither_set_pixelformat(dither, SIXEL_PIXELFORMAT_G8)
+    elif im.mode == '1':
+        dither = sixel_dither_get(SIXEL_BUILTIN_G1)
+        sixel_dither_set_pixelformat(dither, SIXEL_PIXELFORMAT_G1)
+    sixel_encode(data, tw, th, 1, dither, output)
+    print(s.getvalue().decode('ascii'))
+    sixel_dither_unref(dither)
 
 class console_output(object):
     ''' TODO: turn into a usable class
@@ -58,11 +98,22 @@ class console_output(object):
     def __init__(self, args):
         self.args = args
 
-        if os.environ['TERM'] == 'xterm-kitty':
+        self.imgterm = None
+
+        if self.args['--sixel']:
+            self.imgterm = 'sixel'
+        elif 'TERM_PROGRAM' in os.environ:
+            if os.environ['TERM_PROGRAM'] == 'WezTerm':
+                self.imgterm = 'WezTerm'
+            elif os.environ['TERM_PROGRAM'] == 'iTerm.app':
+                self.imgterm = 'iTerm2'
+        elif os.environ['TERM'] == 'xterm-kitty':
             self.imgterm = 'kitty'
-        else:
-            self.imgterm = 'iterm2'
-        
+
+        if self.imgterm is None:
+            print("Error: Unable to detect your terminal program.")
+            sys.exit(1)
+
         self.args = args
         self.term = blessed.Terminal()
         if self.term.number_of_colors < 256:
@@ -76,7 +127,7 @@ class console_output(object):
             if 'x' not in self.args['-g']:
                 print("[Error] The geometry must be specified in the form wxh  - example:  640x480")
                 sys.exit(1)
-                
+
             self.scwid, self.scht = [ int(sci, 10) for sci in self.args['-g'].lower().split('x') ]
         elif self.is_macos:
             self.scwid, self.scht = self.macos_get_pixwidth()
@@ -84,12 +135,13 @@ class console_output(object):
         else:
             print("[Error] The window geometry must be specified in order to display a cover.")
             sys.exit(1)
-            
+
         print(self.term.clear)
         ts = get_terminal_size()
 # Get how many pixels per character
         self.ppc_w = self.scwid / ts.columns
-        self.ppc_h = self.scht / ts.lines
+        self.ppc_h = self.scht / (ts.lines + 1)
+        print(f'scwid: {self.scwid} pixels/w: {self.ppc_w}  scht: {self.scht} pixels/h: {self.ppc_h}')
         print(self.term.move_yx(ts.lines-1, 0))
 
     def prepare_newbook(self):
@@ -129,13 +181,29 @@ class console_output(object):
     def macos_get_pixwidth(self):
         ''' Call applescript to get the pixel width & height of the current active iterm2 window
         '''
-        cmd = ['/usr/bin/osascript', '-e', '''tell application "iTerm2" to get the bounds of the front window''']
+
+        termname = None
+        if 'LC_TERMINAL' in os.environ:
+            termname = os.environ['LC_TERMINAL']
+        elif 'TERM_PROGRAM' in os.environ:
+            termname = os.environ['TERM_PROGRAM']
+        elif 'TERM' in os.environ:
+            if os.environ['TERM'] == 'xterm-kitty':
+                termname = 'kitty'
+
+        if termname is None:
+            print("[Error] Unable to determine your terminal application from the environment.")
+            sys.exit(1)
+
+        print(f"Using terminal: {termname}")
+
+        cmd = ['/usr/bin/osascript', '-e', f'''tell application "System Events" to tell application process "{termname}"''', '-e', 'get size of front window', '-e', 'end tell']
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         outs, errs = p.communicate()
 
-        x1, y1, x2, y2 = [ int(ti, 10) for ti in outs.decode('utf-8').strip().split(', ') ]
-        wid = x2-x1
-        ht = y2-y1
+        print(f"Got output: {outs}  errors: {errs}")
+        wid, ht = [ int(ti, 10) for ti in outs.decode('utf-8').strip().split(', ') ]
+        print("Got %d, %d from macos_get_pixwidth()" % (wid, ht))
         return (wid, ht)
 
     def disp_cov(self, cov, fn):
@@ -180,6 +248,9 @@ class console_output(object):
                 fmt = 'PNG'
             else:
                 fmt = im.format
+            if self.args['--sixel']:
+                output_sixel(im.tobytes(), im, tw, th)
+                return
             im.save(ofd, format=fmt)
             if self.imgterm == 'kitty':
                 kitty_image(ofd.getvalue())
