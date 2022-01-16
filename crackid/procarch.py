@@ -62,6 +62,3 @@ class procarch(object):
                 cov = BytesIO(archread.read())
 
         return cmxml, cov
-
-
-
