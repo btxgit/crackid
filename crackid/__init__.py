@@ -11,4 +11,4 @@ from .procarch import procarch
 from .comicinfo_harvester import comicinfo_harvester
 from .console_output import console_output
 
-__version__ = '0.4.5'
+__version__ = '0.4.7'
